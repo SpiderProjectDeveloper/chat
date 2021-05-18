@@ -36,7 +36,7 @@
 
 	var _globals = { dateDelim: '.', timeDelim: ':', projectId: '1234567890' };
 
-	var _data = "user1\ta message<br> with a random number: 1519\t1620820162	1\n" +
+	var _data = "user1	a message<br> with a random number: 1519 and &lt;brackets&gt;	1620820162	1\n" +
 		"user4	a message<br> with a random number: 3036	1620820161	2\n" +
 		"user7	a message<br> with a random number: 2723	1620820160	3\n" +
 		"user5	a message<br> with a random number: 3446	1620820160	4\n" +
@@ -169,7 +169,7 @@
 		if( messageElem.style.display !== 'none' ) {
 			messageElem.style.display = 'none';
 			updateElem.style.display = 'block';
-			updateElem.value = messageElem.innerHTML.replace(/<br>/g, '\n');
+			updateElem.value = messageElem.innerHTML.replace(/<br>/g, '\n').replace(/&lt;/,'<').replace(/&gt;/,'>');
 			updateElem.focus();
 			return;
 		}
@@ -180,7 +180,7 @@
 				if( xhttp.status == 200 || true ) {
 					messageElem.style.display = 'block';
 					updateElem.style.display = 'none';
-					messageElem.innerHTML = updateElem.value.replace(/\n/g, '<br/>');
+					messageElem.innerHTML = updateElem.value.replace(/\</,'&lt;').replace(/\>/,'&gt;').replace(/\n/g, '<br/>');
 				}
 			}
 		}
