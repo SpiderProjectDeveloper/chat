@@ -1,0 +1,237 @@
+﻿<html>
+
+<head>
+
+<style>
+	* { font-family: arial; }
+	.chat-item { margin:4px; border: 1px solid #efefef; border-radius: 8px; padding:4px; }
+	.chat-item-user { text-align: right; background-color: #efefef; }
+	.chat-user { font-weight: bold; }
+	.chat-message { font-size:100%; }
+	.chat-date { width:100%; text-align:right; font-size:80%; margin-top:8px; }
+	.chat-remove { margin:0px 2px 0px 4px; padding:2px 8px 2px 8px; 
+		border: 1px solid #dfdfdf; border-radius: 8px; background-color:#ffffff; 
+		cursor: pointer; }
+	.chat-update { margin:0px 2px 0px 2px; padding:2px 8px 2px 8px; 
+		border: 1px solid #dfdfdf; border-radius: 8px; background-color:#ffffff; 
+		cursor: pointer; }
+	.chat-message-update { width:100%; display:none; }
+
+	.chat-send { margin:4px; border: 1px solid #efefef; border-radius: 8px; padding:4px; }
+	.chat-send:after { content: ''; display: block; clear: both; }
+	.chat-send-message { display:inline-block; width:100%; }
+	.chat-send-button { display:inline-block; width:100%; margin-top:8px; padding:4px; }
+
+	.chat-messages-list { margin:4px; height:400px; overflow:auto; }
+
+</style>
+
+</head>
+
+<body>
+
+<div id='chat'></div>
+
+<script>
+
+	var _globals = { dateDelim: '.', timeDelim: ':', projectId: '1234567890' };
+
+	var _data = "user1\ta message<br> with a random number: 1519\t1620820162	1\n" +
+		"user4	a message<br> with a random number: 3036	1620820161	2\n" +
+		"user7	a message<br> with a random number: 2723	1620820160	3\n" +
+		"user5	a message<br> with a random number: 3446	1620820160	4\n" +
+		"user5	a message<br> with a random number: 4036	1620820160	5\n" +
+		"user5	a message<br> with a random number: 4611	1620820159	6\n" +
+		"user7	a message<br> with a random number: 2929	1620820159	7\n" +
+		"user6	a message<br> with a random number: 3426	1620820159	8\n" +
+		"user2	a message<br> with a random number: 2333	1620820156	9\n" +
+		"user0	a message<br> with a random number: 2839	1620820163	10\n" +
+		"user5	a message<br> with a random number: 3829	1620820162	11\n" +
+		"user7	a message<br> with a random number: 4736	1620820162	12\n" +
+		"user0	a message<br> with a random number: 318	1620820162	13\n" +
+		"user0	a message<br> with a random number: 434	1620820159	14\n" +
+		"user4	a message<br> with a random number: 3116	1620820158	15\n" +
+		"user1	a message<br> with a random number: 3532	1620820158	16\n" +
+		"user7	a message<br> with a random number: 243	1620820158	17\n" +
+		"user0	a message<br> with a random number: 2713	1620820158	18\n" +
+		"user1	a message<br> with a random number: 2543	1620820158	19\n" +
+		"user6	a message<br> with a random number: 3622	1620820158	20\n" +
+		"user6	a message<br> with a random number: 4238	1620820157	21\n";
+
+	console.log(_data);
+	displayChat('chat', _data, 'user1');
+
+	function displayChat( id, dataResponse, user ) {
+		let containerElem = document.getElementById(id);
+		if(!containerElem) {
+			return;
+		}
+
+		let sendMessageElem = document.createElement('div');
+		sendMessageElem.className = 'chat-item';
+		containerElem.appendChild(sendMessageElem);
+
+		let inputElem = document.createElement('textarea');
+		inputElem.className = 'chat-send-message';
+		inputElem.rows = 4;
+		sendMessageElem.appendChild(inputElem);
+
+		let buttonElem = document.createElement('input');
+		buttonElem.type = 'button';
+		buttonElem.value = 'Send';
+		buttonElem.className = 'chat-send-button';
+		sendMessageElem.appendChild(buttonElem);
+
+		let elem = document.createElement('div');
+		elem.className = 'chat-messages-list';
+		containerElem.appendChild(elem);
+
+		let data = [];
+		let dataArray = dataResponse.split('\n');
+		for( let i = 0 ; i < dataArray.length ; i++ ) {
+			let fields = dataArray[i].split('\t'); 	// 0 - user, 1 - message, 2 - datetime
+			if( fields.length < 4 ) {
+				continue;
+			}
+			let dataItem = { rowid: fields[3], user: fields[0], message: fields[1], 
+				datetime: dateIntoSpiderDateString( parseInt(fields[2]) ) };
+			data.push( dataItem );
+
+			let itemElem = document.createElement('div');
+			itemElem.className = 'chat-item';
+			if( user === dataItem.user ) {
+				itemElem.className += ' ' + 'chat-item-user';
+			}
+			elem.appendChild(itemElem);
+
+			let userElem = document.createElement('div');
+			userElem.className = 'chat-user';
+			userElem.innerHTML = dataItem.user + ':';
+			itemElem.appendChild(userElem);
+
+			let messageElem = document.createElement('div');
+			messageElem.className = 'chat-message';
+			messageElem.innerHTML = dataItem.message;
+			itemElem.appendChild(messageElem);
+
+			dateElem = document.createElement('div');
+			dateElem.className = 'chat-date';
+			let date = dataItem.datetime;
+			dateElem.innerHTML = date;
+
+			if( user === dataItem.user ) {
+				let messageUpdateElem = document.createElement('textarea');
+				messageUpdateElem.className = 'chat-message-update';
+				messageUpdateElem.rows = 4;
+				itemElem.appendChild(messageUpdateElem);
+	
+				let removeElem = document.createElement('span');
+				removeElem.className = 'chat-remove';
+				dateElem.appendChild(removeElem);
+				removeElem.innerHTML = '&#10006;';
+				removeElem.onclick = function(e) { remove( dataItem, itemElem, messageElem, messageUpdateElem, dateElem ) };
+
+				let updateElem = document.createElement('span');
+				updateElem.className = 'chat-update';
+				dateElem.appendChild(updateElem);
+				updateElem.innerHTML = '&#9998;';
+				updateElem.onclick = function(e) { update( dataItem, itemElem, messageElem, messageUpdateElem, dateElem ) };
+			}
+
+			itemElem.appendChild(dateElem);
+		}
+	}
+
+	function remove( dataItem, itemElem, messageElem, updateElem, dateElem ) {
+		if( messageElem.style.display === 'none' ) { 	// Cancel editing, not removing the element
+			messageElem.style.display = 'block';
+			updateElem.style.display = 'none';
+			return;
+		}
+
+		let xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 ) {
+				if( xhttp.status == 200 || true ) {
+					itemElem.remove();
+				}
+			}
+		}
+		let jsonData = JSON.stringify( { projectId: _globals.projectId, rowid: dataItem.rowid } );
+		xhttp.open("POST", '/.chat_remove', true);
+		xhttp.setRequestHeader("Cache-Control", "no-cache");
+		xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');		
+		xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+		xhttp.send( jsonData );
+	}
+
+	function update( dataItem, itemElem, messageElem, updateElem, dateElem ) {
+		if( messageElem.style.display !== 'none' ) {
+			messageElem.style.display = 'none';
+			updateElem.style.display = 'block';
+			updateElem.value = messageElem.innerHTML.replace(/<br>/g, '\n');
+			updateElem.focus();
+			return;
+		}
+
+		let xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 ) {
+				if( xhttp.status == 200 || true ) {
+					messageElem.style.display = 'block';
+					updateElem.style.display = 'none';
+					messageElem.innerHTML = updateElem.value.replace(/\n/g, '<br/>');
+				}
+			}
+		}
+		let jsonData = JSON.stringify( { projectId: _globals.projectId, rowid: dataItem.rowid, message: updateElem.value } );
+		xhttp.open("POST", '/.chat_update', true);
+		xhttp.setRequestHeader("Cache-Control", "no-cache");
+		xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');		
+		xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+		xhttp.send( jsonData );
+	}
+
+	function dateIntoSpiderDateString( date, dateOnly=false ) {
+		let spiderDateString = null;
+
+		if( typeof(date) === 'undefined' || date === null || date === '' ) {
+			return '';
+		}
+
+		if( typeof(date) !== 'object' ) { 	// Not 'object' implies seconds
+			date = new Date( parseInt(date) * 1000 );
+		}
+		let year = date.getUTCFullYear(); 
+		let month = (date.getUTCMonth()+1);
+		if( month < 10 ) {
+			month = "0" + month;
+		}
+		let day = date.getUTCDate();
+		if( day < 10 ) {
+			day = "0" + day;
+		}
+		if( _globals.dateDMY ) {
+			spiderDateString = day + _globals.dateDelim + month + _globals.dateDelim + year; 
+		} else {
+			spiderDateString = month + _globals.dateDelim + day + _globals.dateDelim + year;		 
+		}
+		if( !dateOnly ) {
+			let hours = date.getUTCHours();
+			if( hours < 10 ) {
+				hours = "0" + hours;
+			}
+			let minutes = date.getUTCMinutes();
+			if( minutes < 10 ) {
+				minutes = "0" + minutes;
+			}
+			spiderDateString += "  " + hours + _globals.timeDelim +  minutes;
+		}
+		return( spiderDateString ); 
+	}
+
+</script>
+
+</body>
+
+</html>
